@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
 function ChatHeader() {
-  const { selectedUser, setSelectedUser } = useChatStore();
+  const { selectedUser, setSelectedUser, isTyping } = useChatStore();
   const { onlineUsers } = useAuthStore();
+  // const { isTyping, setIsTyping } = useState(false);
   const isOnline = onlineUsers.includes(selectedUser._id);
 
   useEffect(() => {
@@ -27,13 +28,21 @@ function ChatHeader() {
       <div className="flex items-center space-x-3">
         <div className={`avatar ${isOnline ? "online" : "offline"}`}>
           <div className="w-12 rounded-full">
-            <img src={selectedUser.profilePic || "/avatar.png"} alt={selectedUser.fullName} />
+            <img
+              src={selectedUser.profilePic || "/avatar.png"}
+              alt={selectedUser.fullName}
+            />
           </div>
         </div>
 
         <div>
-          <h3 className="text-slate-200 font-medium">{selectedUser.fullName}</h3>
-          <p className="text-slate-400 text-sm">{isOnline ? "Online" : "Offline"}</p>
+          <h3 className="text-slate-200 font-medium">
+            {selectedUser.fullName}
+          </h3>
+          <p className="text-slate-400 text-sm">
+            {isOnline ? "Online" : "Offline"}
+          </p>
+          <div className="text-typing">{isTyping && <i>typing...</i>}</div>
         </div>
       </div>
 

@@ -12,6 +12,7 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   isSoundEnabled: JSON.parse(localStorage.getItem("isSoundEnabled")) === true,
+  isTyping: false,
 
   toggleSound: () => {
     localStorage.setItem("isSoundEnabled", !get().isSoundEnabled);
@@ -19,7 +20,7 @@ export const useChatStore = create((set, get) => ({
   },
 
   setActiveTab: (tab) => set({ activeTab: tab }),
-  setSelectedUser: (selectedUser) => set({ selectedUser }),
+  setSelectedUser: (selectedUser) => set({ selectedUser, isTyping: false }),
 
   getAllContacts: async () => {
     set({ isUsersLoading: true });
@@ -75,7 +76,10 @@ export const useChatStore = create((set, get) => ({
     set({ messages: [...messages, optimisticMessage] });
 
     try {
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
+      const res = await axiosInstance.post(
+        `/messages/send/${selectedUser._id}`,
+        messageData
+      );
       set({ messages: messages.concat(res.data) });
     } catch (error) {
       // remove optimistic message on failure
@@ -91,7 +95,8 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
 
     socket.on("newMessage", (newMessage) => {
-      const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      const isMessageSentFromSelectedUser =
+        newMessage.senderId === selectedUser._id;
       if (!isMessageSentFromSelectedUser) return;
 
       const currentMessages = get().messages;
@@ -101,7 +106,9 @@ export const useChatStore = create((set, get) => ({
         const notificationSound = new Audio("/sounds/notification.mp3");
 
         notificationSound.currentTime = 0; // reset to start
-        notificationSound.play().catch((e) => console.log("Audio play failed:", e));
+        notificationSound
+          .play()
+          .catch((e) => console.log("Audio play failed:", e));
       }
     });
   },
@@ -109,5 +116,25 @@ export const useChatStore = create((set, get) => ({
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+  },
+
+  sendTypingStatus: (isTyping) => {
+    const socket = useAuthStore.getState().socket;
+    const authUser = useAuthStore.getState().authUser;
+    const { selectedUser } = get();
+
+    if (!socket || !authUser?._id || !selectedUser?._id) return;
+
+    socket.emit("user-typing", {
+      senderId: authUser._id,
+      receiverId: selectedUser._id,
+      isTyping,
+    });
+  },
+
+  handleIncomingTyping: ({ senderId, isTyping }) => {
+    const { selectedUser } = get();
+    if (selectedUser?._id !== senderId) return;
+    set({ isTyping });
   },
 }));

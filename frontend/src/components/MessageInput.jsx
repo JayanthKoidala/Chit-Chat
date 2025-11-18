@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useKeyboardSound from "../hooks/useKeyboardSound";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
@@ -10,8 +10,33 @@ function MessageInput() {
   const [imagePreview, setImagePreview] = useState(null);
 
   const fileInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
 
-  const { sendMessage, isSoundEnabled } = useChatStore();
+  const { sendMessage, isSoundEnabled, sendTypingStatus } = useChatStore();
+
+  const updateTypingStatus = (isTyping) => {
+    if (isTypingRef.current === isTyping) return;
+    isTypingRef.current = isTyping;
+    sendTypingStatus(isTyping);
+  };
+
+  const scheduleTypingStop = () => {
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      updateTypingStatus(false);
+    }, 1500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (isTypingRef.current) {
+        sendTypingStatus(false);
+        isTypingRef.current = false;
+      }
+    };
+  }, [sendTypingStatus]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -25,6 +50,7 @@ function MessageInput() {
     setText("");
     setImagePreview("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    updateTypingStatus(false);
   };
 
   const handleImageChange = (e) => {
@@ -65,12 +91,21 @@ function MessageInput() {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto flex space-x-4">
+      <form
+        onSubmit={handleSendMessage}
+        className="max-w-3xl mx-auto flex space-x-4"
+      >
         <input
           type="text"
           value={text}
           onChange={(e) => {
             setText(e.target.value);
+            if (e.target.value.trim()) {
+              updateTypingStatus(true);
+              scheduleTypingStop();
+            } else {
+              updateTypingStatus(false);
+            }
             isSoundEnabled && playRandomKeyStrokeSound();
           }}
           className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg py-2 px-4"
