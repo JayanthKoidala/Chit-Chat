@@ -40,6 +40,16 @@ io.on("connection", (socket) => {
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
+
+  socket.on("user-typing", ({ receiverId, isTyping }) => {
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (!receiverSocketId) return;
+
+    io.to(receiverSocketId).emit("user-typing", {
+      senderId: socket.userId,
+      isTyping,
+    });
+  });
 });
 
 export { io, app, server };
