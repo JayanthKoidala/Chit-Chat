@@ -7,6 +7,7 @@ import {
   renameGroup,
 } from "../controllers/chat.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
+import express from "express";
 
 const router = express.Router();
 
