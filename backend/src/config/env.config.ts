@@ -6,7 +6,7 @@ export const Env = {
   MONGO_URI: getEnv("MONGO_URI"),
   JWT_SECRET: getEnv("JWT_SECRET", "secret_jwt"),
   JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN", "15m"),
-  FRONTEND_ORIGIN: getEnv("FRONTEND_ORIGIN", "http://localhost:5173"),
+  CLIENT_URL: getEnv("CLIENT_URL", "http://localhost:5173"),
 
   // Cloudinary
   CLOUDINARY_CLOUD_NAME: getEnv("CLOUDINARY_CLOUD_NAME"),

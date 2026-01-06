@@ -15,7 +15,7 @@ const onlineUsers = new Map<string, string>();
 export const initializeSocket = (httpServer: HTTPServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: Env.FRONTEND_ORIGIN,
+      origin: Env.CLIENT_URL,
       methods: ["GET", "POST"],
       credentials: true,
     },
