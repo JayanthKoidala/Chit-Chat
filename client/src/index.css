@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+  background-color: #eef6ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.App {
+  width: 100%;
+  min-height: 100vh;
+}
