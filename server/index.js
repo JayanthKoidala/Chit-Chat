@@ -26,7 +26,7 @@ const __dirname1 = path.resolve();
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname1, "/client/dist")));
 
-  app.get("*", (req, res) =>
+  app.get("*all", (req, res) =>
     res.sendFile(path.resolve(__dirname1, "client", "dist", "index.html"))
   );
 } else {
@@ -51,7 +51,7 @@ const server = app.listen(
 const io = require('socket.io')(server, {
     pingTimeout: 60000,
     cors: {
-        origin: 'http://localhost:5173',
+        origin: process.env.NODE_ENV === "production" ? "*" : "http://localhost:5173",
         // credentials: true,
     },
 });
