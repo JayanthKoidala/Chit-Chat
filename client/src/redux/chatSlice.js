@@ -48,13 +48,24 @@ const chatSlice = createSlice({
                 }
                 return chat;
             });
+            
+            // Only update selectedChat reference if the status actually changed for a user in it
             if (state.selectedChat && !state.selectedChat.isGroupChat) {
-                state.selectedChat = {
-                    ...state.selectedChat,
-                    users: state.selectedChat.users.map((user) => 
-                        user._id === userId ? { ...user, status } : user
-                    ),
-                };
+                const userIndex = state.selectedChat.users.findIndex(u => u._id === userId);
+                if (userIndex !== -1 && state.selectedChat.users[userIndex].status !== status) {
+                    const updatedUsers = [...state.selectedChat.users];
+                    updatedUsers[userIndex] = { ...updatedUsers[userIndex], status };
+                    state.selectedChat = {
+                        ...state.selectedChat,
+                        users: updatedUsers,
+                    };
+                }
+            }
+        },
+        addNotification: (state, action) => {
+            const newMessage = action.payload;
+            if (!state.notifications.find(n => n._id === newMessage._id)) {
+                state.notifications = [newMessage, ...state.notifications];
             }
         },
         resetChatState: (state) => {
@@ -65,5 +76,14 @@ const chatSlice = createSlice({
     },
 });
 
-export const { setSelectedChat, setChats, setNotifications, addChat, updateLatestMessage, updateUserStatus, resetChatState } = chatSlice.actions;
+export const { 
+    setSelectedChat, 
+    setChats, 
+    setNotifications, 
+    addChat, 
+    updateLatestMessage, 
+    updateUserStatus, 
+    resetChatState,
+    addNotification
+} = chatSlice.actions;
 export default chatSlice.reducer;

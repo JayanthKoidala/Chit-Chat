@@ -4,13 +4,20 @@ import ChatBox from '../components/Chat/ChatBox';
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getSocket } from '../socket';
-import { addChat, updateLatestMessage, setNotifications, updateUserStatus } from '../redux/chatSlice';
+import { useRef } from 'react';
+import { addChat, updateLatestMessage, updateUserStatus, addNotification } from '../redux/chatSlice';
 
 const ChatPage = () => {
   const [fetchAgain, setFetchAgain] = useState(false);
   const { userInfo } = useSelector((state) => state.user);
-  const { selectedChat, notifications } = useSelector((state) => state.chat);
+  const { selectedChat } = useSelector((state) => state.chat);
   const dispatch = useDispatch();
+
+  // Keep a ref of selectedChat so listeners can access it without causing re-registration
+  const selectedChatRef = useRef(selectedChat);
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
 
   useEffect(() => {
     if (!userInfo) return;
@@ -25,11 +32,9 @@ const ChatPage = () => {
         message: newMessageRecieved
       }));
 
-      // If not selected chat, add to notifications
-      if (!selectedChat || selectedChat._id !== newMessageRecieved.chat._id) {
-        if (!notifications.find(n => n._id === newMessageRecieved._id)) {
-          dispatch(setNotifications([newMessageRecieved, ...notifications]));
-        }
+      // Use ref to check if not current chat, then add to notifications
+      if (!selectedChatRef.current || selectedChatRef.current._id !== newMessageRecieved.chat._id) {
+          dispatch(addNotification(newMessageRecieved));
       }
     };
 
@@ -50,7 +55,7 @@ const ChatPage = () => {
       socket.off('chat created', handleChatCreated);
       socket.off('user status', handleUserStatus);
     };
-  }, [selectedChat, notifications, userInfo]);
+  }, [userInfo, dispatch]); // Only depend on userInfo (and dispatch)
 
   return (
     <Box 
